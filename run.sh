@@ -31,4 +31,4 @@ fi
 
 # Run server
 echo "${GREEN}Running server...${NOCOLOR}"
-uv run python server.py --sse --port ${APP_PORT:-8000}
+uv run python -m app.main --sse --port ${APP_PORT:-8000}

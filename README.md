@@ -10,6 +10,7 @@ A fast and lightweight **MCP server** with different tools for AI agents. It sup
 - [Run server in SSE mode](#run-server-in-sse-mode)
 - [Configure Claude Desktop](#configure-claude-desktop)
 - [Available tools](#available-tools)
+- [Create new tool](#create-new-tool)
 - [Debug in VSCode](#debug-in-vscode)
 
 ---
@@ -47,10 +48,10 @@ Then, customize it if needed.
 
 ## Run server in STDIO mode
 
-First of all, to test the server, install and run a MCP inspector with:
+First of all, to test the server, install and run a MCP Inspector with:
 
 ```bash
-npx @modelcontextprotocol/inspector uv run python server.py
+npx @modelcontextprotocol/inspector uv run python -m app.main
 ```
 
 At the end, a UI will open in your browser. Connect to the server by clicking **Connect** on the left menu.
@@ -60,7 +61,7 @@ Then, from the top bar, click on **Tools** and **List tools**. At this point you
 If you want to test it without the inspector, simply launch with:
 
 ```bash
-uv run python server.py
+uv run python -m app.main
 ```
 
 [↑ index](#index)
@@ -72,7 +73,13 @@ uv run python server.py
 If you want to use the server through **SSE** from remote agents, launch it with:
 
 ```bash
-uv run python server.py --sse --port 8000
+uv run python -m app.main --sse --port 8000
+```
+
+As the STDIO mode, you can test it with MCP Inspector (remote) with:
+
+```bash
+npx @modelcontextprotocol/inspector
 ```
 
 If you want to simulate a tool call from a remote agent, create a simple **STDIO client** in python (e.g. `stdio_test.py`) with this code:
@@ -121,7 +128,7 @@ If you want to use tools on **Claude Desktop**, create the file `claude_desktop_
   "mcpServers": {
     "mcp-server-tools": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/mcp-server", "python", "server.py"]
+      "args": ["run", "--directory", "/path/to/mcp-server", "python", "-m", "app.main"]
     }
   }
 }
@@ -150,6 +157,58 @@ Move this file in:
 
 ---
 
+### Create new tool
+
+To create new tool you need to:
+
+- Create a new file (e.g. `app/tools/my_new_tool.py`)
+- Write your logic keeping this structure:
+
+  ```python
+  from app.mcp import mcp
+
+  @mcp.tool()
+  def my_new_tool(your_param: str) -> dict[str, Any]:
+    """
+    Clear and exaustive tool description.
+
+    Args:
+        your_param: clear and exaustive param description
+
+    Returns:
+        Clear and exaustive result description
+    """
+
+    # YOUR LOGIC HERE
+
+    if some_error:
+        return {"success": False, "error": "Clear error description"}
+    
+    return {
+        "success": True,
+        "your_resp": "...",
+        "other_resp": "...",
+    }
+  ```
+
+- Edit `app/tools/__init__.py` file and add your tool:
+
+  ```python
+  from app.tools import my_new_tool
+
+  __all__ = [
+      "my_new_tool",
+  ]
+  ```
+
+- Restart your server
+
+In the same way, if you want to **delete** an existing tool, simply delete it from `__init__.py` and delete the related `.py` file.
+
+[↑ index](#index)
+
+---
+
 ### Debug in VSCode
 
 To debug your Python microservice you need to:
@@ -169,9 +228,11 @@ To debug your Python microservice you need to:
       "name": "MCP Server (SSE)",
       "type": "debugpy",
       "request": "launch",
-      "program": "server.py",
+      "module": "app.main",
       "args": [
-        "--sse"
+          "--sse",
+          "--port", "8000",
+          "--reload"
       ],
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
@@ -182,7 +243,10 @@ To debug your Python microservice you need to:
       "name": "MCP Server (STDIO)",
       "type": "debugpy",
       "request": "launch",
-      "program": "server.py",
+      "module": "app.main",
+      "args": [
+          "--reload"
+      ],
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
