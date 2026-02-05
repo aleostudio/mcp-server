@@ -146,6 +146,8 @@ Move this file in:
 | `fetch_url` | HTTP GET/HEAD requests |
 | `convert_data` | JSON, Base64, Hex conversions |
 
+[↑ index](#index)
+
 ---
 
 ### Debug in VSCode
